@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-kratos/kratos/v2/log"
+	"google.golang.org/grpc"
+
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/registry"
-	"google.golang.org/grpc"
 )
 
 func TestWithEndpoint(t *testing.T) {
@@ -44,11 +44,11 @@ func TestWithMiddleware(t *testing.T) {
 
 type mockRegistry struct{}
 
-func (m *mockRegistry) GetService(ctx context.Context, serviceName string) ([]*registry.ServiceInstance, error) {
+func (m *mockRegistry) GetService(_ context.Context, _ string) ([]*registry.ServiceInstance, error) {
 	return nil, nil
 }
 
-func (m *mockRegistry) Watch(ctx context.Context, serviceName string) (registry.Watcher, error) {
+func (m *mockRegistry) Watch(_ context.Context, _ string) (registry.Watcher, error) {
 	return nil, nil
 }
 
@@ -67,15 +67,6 @@ func TestWithTLSConfig(t *testing.T) {
 	WithTLSConfig(v)(o)
 	if !reflect.DeepEqual(v, o.tlsConf) {
 		t.Errorf("expect %v but got %v", v, o.tlsConf)
-	}
-}
-
-func TestWithLogger(t *testing.T) {
-	o := &clientOptions{}
-	v := log.DefaultLogger
-	WithLogger(v)(o)
-	if !reflect.DeepEqual(v, o.logger) {
-		t.Errorf("expect %v but got %v", v, o.logger)
 	}
 }
 
@@ -145,7 +136,6 @@ func TestDialConn(t *testing.T) {
 		true,
 		WithDiscovery(&mockRegistry{}),
 		WithTimeout(10*time.Second),
-		WithLogger(log.DefaultLogger),
 		WithEndpoint("abc"),
 		WithMiddleware(EmptyMiddleware()),
 	)

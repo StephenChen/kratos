@@ -2,6 +2,7 @@ package ewma
 
 import (
 	"context"
+	"net"
 	"reflect"
 	"testing"
 	"time"
@@ -13,6 +14,7 @@ import (
 func TestDirect(t *testing.T) {
 	b := &Builder{}
 	wn := b.Build(selector.NewNode(
+		"http",
 		"127.0.0.1:9090",
 		&registry.ServiceInstance{
 			ID:        "127.0.0.1:9090",
@@ -53,6 +55,7 @@ func TestDirect(t *testing.T) {
 func TestDirectError(t *testing.T) {
 	b := &Builder{}
 	wn := b.Build(selector.NewNode(
+		"http",
 		"127.0.0.1:9090",
 		&registry.ServiceInstance{
 			ID:        "127.0.0.1:9090",
@@ -89,6 +92,7 @@ func TestDirectErrorHandler(t *testing.T) {
 		},
 	}
 	wn := b.Build(selector.NewNode(
+		"http",
 		"127.0.0.1:9090",
 		&registry.ServiceInstance{
 			ID:        "127.0.0.1:9090",
@@ -97,11 +101,15 @@ func TestDirectErrorHandler(t *testing.T) {
 			Endpoints: []string{"http://127.0.0.1:9090"},
 			Metadata:  map[string]string{"weight": "10"},
 		}))
-
+	errs := []error{
+		context.DeadlineExceeded,
+		context.Canceled,
+		net.ErrClosed,
+	}
 	for i := 0; i < 5; i++ {
 		var err error
 		if i != 0 {
-			err = context.DeadlineExceeded
+			err = errs[i%len(errs)]
 		}
 		done := wn.Pick()
 		if done == nil {
